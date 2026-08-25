@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 3
+  tags: []
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - 
+  - Water
+  - UI
+  - 
+  - 
+  - Player
+  - Solid
+  - Gem
+  - Hazard
+  - Trigger
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
+  - name: BackgroundFar
+    uniqueID: 100137
+    locked: 0
+  - name: BackgroundNear
+    uniqueID: 100274
+    locked: 0
+  - name: GameplayBack
+    uniqueID: 100411
+    locked: 0
+  - name: Collectibles
+    uniqueID: 100548
+    locked: 0
+  - name: Player
+    uniqueID: 100685
+    locked: 0
+  - name: GameplayFront
+    uniqueID: 100822
+    locked: 0
+  - name: Foreground
+    uniqueID: 100959
+    locked: 0
+  m_RenderingLayers:
+  - Default
