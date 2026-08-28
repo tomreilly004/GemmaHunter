@@ -49,7 +49,7 @@ namespace GemmaRainbowSeeker.Tests
             _gem.Initialize(RainbowColour.Red, _session);
 
             int initialScore = _session.ScoreManager.Score;
-            float initialCombo = _session.ScoreManager.Combo;
+            int initialMultiplier = _session.RushController.Multiplier; // 1
 
             bool collected = _gem.AttemptPickup(_playerObj, Vector2.up);
 
@@ -58,17 +58,17 @@ namespace GemmaRainbowSeeker.Tests
             Assert.IsFalse(_gem.GetComponent<Collider2D>().enabled, "Collider should be disabled on collection");
             Assert.AreEqual(1, _session.RainbowProgress.CollectedCount, "RainbowProgress count should advance to 1");
             Assert.AreEqual(RainbowColour.Orange, _session.RainbowProgress.CurrentTarget, "Next target should be Orange");
-            Assert.AreEqual(initialScore + 100, _session.ScoreManager.Score, "Score should increase by 100 * combo");
-            Assert.AreEqual(initialCombo + 0.25f, _session.ScoreManager.Combo, "Combo should increase by 0.25");
+            Assert.AreEqual(initialScore + 100, _session.ScoreManager.Score, "Score should increase by 100 * 1 (x1 for first gem)");
+            Assert.AreEqual(2, _session.RushController.Multiplier, "Rush multiplier should rise to x2 after first correct gem");
             Assert.AreEqual(1, _session.SessionStats.CorrectCollections, "Session stats correct count should be 1");
         }
 
         [Test]
-        public void WrongRejection_DoesNotCollect_ReducesCombo_AppliesCooldown()
+        public void WrongRejection_DoesNotCollect_ResetsRush_AppliesCooldown()
         {
-            // Boost combo first
-            _session.ScoreManager.RegisterCorrectCollection();
-            float elevatedCombo = _session.ScoreManager.Combo; // 1.25
+            // Boost Rush to x2 first
+            _session.RushController.RegisterCorrectCollection();
+            Assert.AreEqual(2, _session.RushController.Multiplier);
 
             _gem.Initialize(RainbowColour.Violet, _session); // Violet is wrong when target is Orange (or Red)
 
@@ -78,7 +78,8 @@ namespace GemmaRainbowSeeker.Tests
             Assert.IsFalse(_gem.IsCollected, "Gem should NOT be marked as collected");
             Assert.IsTrue(_gem.GetComponent<Collider2D>().enabled, "Collider should remain enabled");
             Assert.IsTrue(_gem.IsOnRejectionCooldown, "Rejection cooldown should be active");
-            Assert.Less(_session.ScoreManager.Combo, elevatedCombo, "Combo should decrease on wrong attempt");
+            Assert.AreEqual(1, _session.RushController.Multiplier, "Rush multiplier should reset to x1 on wrong attempt");
+            Assert.AreEqual(RushResetReason.WrongColour, _session.RushController.LastResetReason);
             Assert.AreEqual(1, _session.SessionStats.WrongAttempts, "Session stats wrong attempts should be 1");
 
             // Attempt repeat pickup immediately during cooldown

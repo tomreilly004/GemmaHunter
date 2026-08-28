@@ -112,9 +112,10 @@ namespace GemmaRainbowSeeker
 
         private void Update()
         {
-            // Animate arrow visuals scrolling along local X axis
+            // Animate arrow visuals scrolling and pulsing along local flow vector
             if (arrowsContainer != null)
             {
+                float time = Time.time;
                 for (int i = 0; i < arrowsContainer.childCount; i++)
                 {
                     Transform child = arrowsContainer.GetChild(i);
@@ -126,6 +127,16 @@ namespace GemmaRainbowSeeker
                         lp.x -= wrapDistance;
                     }
                     child.localPosition = lp;
+
+                    // Wave pulse on arrow alpha and scale
+                    var sr = child.GetComponent<SpriteRenderer>();
+                    if (sr != null)
+                    {
+                        float wave = 0.6f + 0.4f * Mathf.Sin(time * 4f + i * 0.8f);
+                        Color c = sr.color;
+                        c.a = wave;
+                        sr.color = c;
+                    }
                 }
             }
         }

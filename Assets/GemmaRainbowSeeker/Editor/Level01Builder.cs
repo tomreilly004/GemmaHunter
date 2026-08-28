@@ -61,7 +61,7 @@ namespace GemmaRainbowSeeker.Editor
             var rootObjects = scene.GetRootGameObjects();
             foreach (var r in rootObjects)
             {
-                if (r.name.StartsWith("TestGameSession") || r.name.StartsWith("TestPlayer") || r.name.StartsWith("TestGate"))
+                if (r.name.StartsWith("Test"))
                 {
                     Undo.DestroyObjectImmediate(r);
                 }
@@ -120,6 +120,13 @@ namespace GemmaRainbowSeeker.Editor
 
             // 5. Setup Camera Confiner for entire course (x = -10 to 370, y = -10 to 10)
             SetupCameraConfiner();
+
+            // Ensure CameraShake2D on Main Camera
+            var mainCam = Camera.main;
+            if (mainCam != null && mainCam.GetComponent<CameraShake2D>() == null)
+            {
+                mainCam.gameObject.AddComponent<CameraShake2D>();
+            }
 
             // 6. Build Parallax Backgrounds using sprite pack assets
             BuildParallaxBackgrounds(backgroundsContainer);
@@ -522,12 +529,16 @@ namespace GemmaRainbowSeeker.Editor
         private static void EnsureGameSession()
         {
             var session = UnityEngine.Object.FindFirstObjectByType<GameSession>();
-            if (session != null && session.LevelRules == null)
+            if (session != null && session.LevelDefinition == null)
             {
-                var rules = AssetDatabase.LoadAssetAtPath<LevelRules>("Assets/GemmaRainbowSeeker/Data/LevelRules_Level01.asset");
-                if (rules != null)
+                var def = AssetDatabase.LoadAssetAtPath<LevelDefinition>("Assets/GemmaRainbowSeeker/Data/LevelDefinition_Level01.asset");
+                if (def == null)
                 {
-                    SetField(session, "_levelRules", rules);
+                    def = AssetDatabase.LoadAssetAtPath<LevelDefinition>("Assets/GemmaRainbowSeeker/Data/LevelRules_Level01.asset");
+                }
+                if (def != null)
+                {
+                    SetField(session, "_levelDefinition", def);
                     EditorUtility.SetDirty(session);
                 }
             }

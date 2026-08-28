@@ -27,16 +27,117 @@ namespace GemmaRainbowSeeker
         [Range(0.1f, 2f)]
         [SerializeField] private float trailTime = 0.4f;
 
+        [Header("Accessibility & Tuning")]
+        [Tooltip("Global trail intensity multiplier (set lower for reduced visual motion).")]
+        [Range(0.1f, 2f)]
+        [SerializeField] private float trailIntensityMultiplier = 1.0f;
+
         private TrailRenderer _trail;
+        private GemmaDash _dash;
         private Coroutine _flashRoutine;
+
+        private int _currentRushTier = 1;
 
         public TrailRenderer TrailRenderer => _trail;
         public Color CurrentColor => defaultColor;
+        public int CurrentRushTier => _currentRushTier;
+        public float TrailIntensityMultiplier
+        {
+            get => trailIntensityMultiplier;
+            set
+            {
+                trailIntensityMultiplier = Mathf.Clamp(value, 0.1f, 2f);
+                ConfigureDefaultTrail();
+            }
+        }
 
         private void Awake()
         {
             _trail = GetComponent<TrailRenderer>();
+            _dash = GetComponentInParent<GemmaDash>();
             ConfigureDefaultTrail();
+        }
+
+        private void OnEnable()
+        {
+            if (_dash != null)
+            {
+                _dash.OnDashStarted += HandleDashStarted;
+                _dash.OnDashEnded += HandleDashEnded;
+            }
+        }
+
+        private void OnDisable()
+        {
+            if (_dash != null)
+            {
+                _dash.OnDashStarted -= HandleDashStarted;
+                _dash.OnDashEnded -= HandleDashEnded;
+            }
+        }
+
+        private void Update()
+        {
+            // Sync with active GameSession Rush tier
+            var session = GameSession.Active;
+            int tier = (session != null && session.RushController != null) ? session.RushController.Multiplier : 1;
+            if (tier != _currentRushTier)
+            {
+                SetRushTier(tier);
+            }
+        }
+
+        /// <summary>
+        /// Adjusts trail intensity and appearance according to the active Rush tier:
+        /// - x1: Normal width and subtle color.
+        /// - x2: 1.25x width.
+        /// - x3: 1.50x width + speed streak brightness.
+        /// - x4: 1.75x width.
+        /// - x5: 2.00x width + vibrant radiant trail.
+        /// </summary>
+        public void SetRushTier(int tier)
+        {
+            _currentRushTier = Mathf.Clamp(tier, 1, 5);
+            if (_trail == null || (_dash != null && _dash.IsDashing)) return;
+
+            float tierScale = 1f + (_currentRushTier - 1) * 0.25f;
+            _trail.startWidth = startWidth * tierScale * trailIntensityMultiplier;
+            _trail.time = trailTime * (1f + (_currentRushTier - 1) * 0.1f);
+
+            if (_currentRushTier >= 5)
+            {
+                // Radiant max rush
+                Color maxCol = new Color(1f, 0.9f, 0.35f, 0.95f);
+                SetColorGradient(maxCol, new Color(0.8f, 0.4f, 1f, 0f));
+            }
+            else if (_currentRushTier >= 3)
+            {
+                // Speed streak tier
+                Color streakCol = new Color(0.6f, 0.95f, 1f, 0.85f);
+                SetColorGradient(streakCol, new Color(0.3f, 0.7f, 1f, 0f));
+            }
+            else
+            {
+                SetColorGradient(defaultColor, tailColor);
+            }
+        }
+
+        private void HandleDashStarted(Vector2 dir)
+        {
+            if (_trail == null) return;
+            // Stronger, wider dash trail
+            _trail.startWidth = startWidth * 1.6f * trailIntensityMultiplier;
+            _trail.time = trailTime * 1.4f;
+            Color boostCol = new Color(0.7f, 0.95f, 1f, 0.95f);
+            SetColorGradient(boostCol, new Color(0.3f, 0.7f, 1f, 0f));
+        }
+
+        private void HandleDashEnded()
+        {
+            if (_trail == null) return;
+            _trail.startWidth = startWidth * trailIntensityMultiplier;
+            _trail.time = trailTime;
+            SetColorGradient(defaultColor, tailColor);
         }
 
         private void ConfigureDefaultTrail()

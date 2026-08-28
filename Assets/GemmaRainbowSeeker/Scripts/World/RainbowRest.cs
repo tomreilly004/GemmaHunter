@@ -65,11 +65,34 @@ namespace GemmaRainbowSeeker
         {
             if (_isActivated && auraRenderer != null)
             {
-                // Gentle breathing pulsation on active aura
-                float pulse = 0.85f + 0.15f * Mathf.Sin(Time.time * pulseSpeed);
-                Color c = activeAuraColor;
-                c.a *= pulse;
-                auraRenderer.color = c;
+                // Dynamic rainbow cycling through banked colours
+                int bankedCount = GameSession.Active != null && GameSession.Active.RainbowProgress != null
+                    ? GameSession.Active.RainbowProgress.BankedCount
+                    : 7;
+
+                if (bankedCount > 0)
+                {
+                    float cycleSpeed = 1.8f;
+                    float t = (Time.time * cycleSpeed) % bankedCount;
+                    int colIndexA = (int)t;
+                    int colIndexB = (colIndexA + 1) % bankedCount;
+                    float lerpFactor = t - colIndexA;
+
+                    Color colA = RainbowColourHelper.GetColor((RainbowColour)colIndexA);
+                    Color colB = RainbowColourHelper.GetColor((RainbowColour)colIndexB);
+                    Color activeRainbow = Color.Lerp(colA, colB, lerpFactor);
+
+                    float pulse = 0.85f + 0.15f * Mathf.Sin(Time.time * pulseSpeed);
+                    activeRainbow.a = 0.9f * pulse;
+                    auraRenderer.color = activeRainbow;
+                }
+                else
+                {
+                    float pulse = 0.85f + 0.15f * Mathf.Sin(Time.time * pulseSpeed);
+                    Color c = activeAuraColor;
+                    c.a *= pulse;
+                    auraRenderer.color = c;
+                }
             }
         }
 
@@ -87,9 +110,10 @@ namespace GemmaRainbowSeeker
         /// <summary>
         /// Activates this Rainbow Rest: banks progress, updates checkpoint, and grants first-time bonuses.
         /// </summary>
-        public void ActivateRest(PlayerHealth health = null)
+        public void ActivateRest(PlayerHealth health = null, GameSession session = null)
         {
             _isActivated = true;
+            var activeSession = session ?? GameSession.Active;
 
             // 1. Update Checkpoint Manager
             if (CheckpointManager.Instance != null)
@@ -98,7 +122,7 @@ namespace GemmaRainbowSeeker
             }
 
             // 2. Bank rainbow progress
-            GameSession.Active?.BankProgress();
+            activeSession?.BankProgress();
 
             // 3. One-time first activation bonus (Heal 1 HP + 100 points)
             if (!_hasAwardedFirstBonus)
@@ -117,12 +141,12 @@ namespace GemmaRainbowSeeker
                 }
 
                 // Award points and record stats
-                if (GameSession.Active != null)
+                if (activeSession != null)
                 {
-                    int pts = GameSession.Active.LevelRules != null ?
-                              GameSession.Active.LevelRules.RainbowRestFirstActivationPoints : 100;
-                    GameSession.Active.ScoreManager?.AddPoints(pts);
-                    GameSession.Active.SessionStats?.RecordRainbowRestActivated();
+                    int pts = activeSession.LevelRules != null ?
+                              activeSession.LevelRules.RainbowRestFirstActivationPoints : 100;
+                    activeSession.ScoreManager?.AddPoints(pts);
+                    activeSession.SessionStats?.RecordRainbowRestActivated();
                 }
 
                 OnFirstActivationBonusAwarded?.Invoke(this);

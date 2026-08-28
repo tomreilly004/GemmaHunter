@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 343e4f5a86c19d844981c5a5cb13c6f1, type: 3}
+  m_Name: LevelDefinition_Level10
+  m_EditorClassIdentifier: GemmaRainbowSeeker.Runtime::GemmaRainbowSeeker.LevelDefinition
+  _levelNumber: 10
+  _displayName: "Level 10 \u2014 Rainbow Run"
+  _sceneName: Level10
+  _objectiveDescription: Collect Red, Red, Orange, Yellow, Green, Blue, Indigo, Violet
+  _colourSequence: 0000000000000000010000000200000003000000040000000500000006000000
+  _targetCompletionTime: 80
+  _rainbowRushTimeWindow: 4
+  _twoStarThreshold: 3000
+  _threeStarThreshold: 4200
+  _dashEnabled: 1
+  _healthEnabled: 1
+  _currentsEnabled: 1
+  _solidObstaclesEnabled: 1
+  _dangerousHazardsEnabled: 1
+  _enemiesEnabled: 1
+  _rainbowRestsEnabled: 1
+  _tutorialSequence: {fileID: 11400000, guid: 8e585e1d0743b294d96ad9002df12f82, type: 2}
+  _correctGemBasePoints: 100
+  _hazardBreakPoints: 50
+  _rainbowRestFirstActivationPoints: 100
+  _completionHealthBonusPerPip: 150
+  _timeBonusPerSecondUnderPar: 5
+  _comboStart: 1
+  _comboIncrement: 0.25
+  _comboMax: 2.5
+  _comboWrongPenalty: 0.5
+  _comboMin: 1
+  _restartFromRestPenalty: 200

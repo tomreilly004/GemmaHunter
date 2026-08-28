@@ -86,10 +86,23 @@ namespace GemmaRainbowSeeker
 
             if (_isUnlocked && portalGlowRenderer != null)
             {
-                float pulse = 0.85f + 0.15f * Mathf.Sin(Time.time * 4f);
-                Color c = unlockedPortalColor;
-                c.a *= pulse;
-                portalGlowRenderer.color = c;
+                // Celebratory rainbow color cycling and rotation shimmer
+                float cycleSpeed = 2.0f;
+                float t = (Time.time * cycleSpeed) % 7f;
+                int colIndexA = (int)t;
+                int colIndexB = (colIndexA + 1) % 7;
+                float lerpFactor = t - colIndexA;
+
+                Color colA = RainbowColourHelper.GetColor((RainbowColour)colIndexA);
+                Color colB = RainbowColourHelper.GetColor((RainbowColour)colIndexB);
+                Color celebrationCol = Color.Lerp(colA, colB, lerpFactor);
+
+                float pulse = 0.9f + 0.15f * Mathf.Sin(Time.time * 5f);
+                celebrationCol.a = 0.95f * pulse;
+                portalGlowRenderer.color = celebrationCol;
+
+                // Gentle portal rotation
+                portalGlowRenderer.transform.Rotate(0f, 0f, 35f * Time.deltaTime);
             }
         }
 
@@ -243,7 +256,7 @@ namespace GemmaRainbowSeeker
 
         public void EnterGate(GameObject playerObj)
         {
-            if (_isEntered) return;
+            if (!_isUnlocked || _isEntered) return;
             _isEntered = true;
 
             // 1. Bank final progress

@@ -140,7 +140,7 @@ namespace GemmaRainbowSeeker
             {
                 int penalty = session.LevelRules != null ? session.LevelRules.RestartFromRestPenalty : 200;
                 session.ScoreManager?.SubtractPoints(penalty);
-                session.ScoreManager?.ResetCombo();
+                session.RushController?.ResetRush(RushResetReason.Restart);
                 session.RestoreBankedProgress();
                 session.SessionStats?.RecordCheckpointRestart();
             }
@@ -188,8 +188,8 @@ namespace GemmaRainbowSeeker
                 int penalty = session.LevelRules != null ? session.LevelRules.RestartFromRestPenalty : 200;
                 session.ScoreManager?.SubtractPoints(penalty);
 
-                // Reset combo multiplier to x1
-                session.ScoreManager?.ResetCombo();
+                // Reset Rainbow Rush multiplier back to x1
+                session.RushController?.ResetRush(RushResetReason.Restart);
 
                 // Restore rainbow progress to banked count (reactivates unbanked gems & broken hazards)
                 session.RestoreBankedProgress();

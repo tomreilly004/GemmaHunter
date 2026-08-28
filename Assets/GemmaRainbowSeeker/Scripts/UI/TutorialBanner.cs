@@ -4,13 +4,16 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.UI;
 
 namespace GemmaRainbowSeeker
 {
     /// <summary>
-    /// Displays non-blocking, queued tutorial message cards.
-    /// Shows keyboard and gamepad controls, dismisses upon input or gameplay trigger,
-    /// and never permanently blocks player control.
+    /// Displays data-driven tutorial cards with support for:
+    /// - Gameplay pause (suspending Rainbow Rush without resetting)
+    /// - UI Target highlighting
+    /// - Touch, keyboard, mouse and gamepad dismissal
+    /// - Queued step processing
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class TutorialBanner : MonoBehaviour
@@ -21,14 +24,31 @@ namespace GemmaRainbowSeeker
             public string title;
             public string body;
             public string controlsHint;
-            public float autoDismissDuration; // 0 = wait for input / event
+            public string highlightTarget;
+            public bool pauseGameplay;
+            public float autoDismissDuration; // 0 = wait for dismiss button / input
+            public Action onDismissed;
 
             public TutorialMessage(string title, string body, string hint = "", float duration = 0f)
             {
                 this.title = title;
                 this.body = body;
                 this.controlsHint = hint;
+                this.highlightTarget = "";
+                this.pauseGameplay = false;
                 this.autoDismissDuration = duration;
+                this.onDismissed = null;
+            }
+
+            public TutorialMessage(string title, string body, string hint, string highlight, bool pause, float duration, Action onDismiss = null)
+            {
+                this.title = title;
+                this.body = body;
+                this.controlsHint = hint;
+                this.highlightTarget = highlight;
+                this.pauseGameplay = pause;
+                this.autoDismissDuration = duration;
+                this.onDismissed = onDismiss;
             }
         }
 
@@ -38,6 +58,10 @@ namespace GemmaRainbowSeeker
         [SerializeField] private TextMeshProUGUI titleText;
         [SerializeField] private TextMeshProUGUI bodyText;
         [SerializeField] private TextMeshProUGUI controlsHintText;
+        [SerializeField] private UnityEngine.UI.Button dismissButton;
+
+        [Header("Highlight Overlay")]
+        [SerializeField] private RectTransform highlightBox;
 
         [Header("Animation")]
         [Range(0.1f, 1f)]
@@ -57,29 +81,32 @@ namespace GemmaRainbowSeeker
                 bannerCanvasGroup.alpha = 0f;
                 bannerCanvasGroup.blocksRaycasts = false;
             }
-        }
 
-        private void Start()
-        {
-            // Initial default welcome tutorial message
-            QueueMessage(new TutorialMessage(
-                "HOW TO PLAY",
-                "Swim through the sky and collect the 7 rainbow gems IN EXACT ORDER (Red to Violet).\nAvoid dark storm clouds or dash through cracked ones!",
-                "MOVE: [WASD / Arrows / Left Stick]   DASH: [Space / Button South]   PAUSE: [Esc]",
-                5.0f
-            ));
+            if (dismissButton != null)
+            {
+                dismissButton.onClick.AddListener(DismissCurrent);
+            }
+
+            if (highlightBox != null)
+            {
+                highlightBox.gameObject.SetActive(false);
+            }
         }
 
         private void Update()
         {
             if (_isShowingMessage)
             {
-                // Check if player pressed Move, Dash, or any key to dismiss early
-                if (Keyboard.current != null && (Keyboard.current.anyKey.wasPressedThisFrame || Keyboard.current.spaceKey.wasPressedThisFrame))
+                // Keyboard, Gamepad or touch dismiss
+                if (Keyboard.current != null && (Keyboard.current.spaceKey.wasPressedThisFrame || Keyboard.current.enterKey.wasPressedThisFrame || Keyboard.current.escapeKey.wasPressedThisFrame))
                 {
                     DismissCurrent();
                 }
-                else if (Gamepad.current != null && (Gamepad.current.buttonSouth.wasPressedThisFrame || Gamepad.current.leftStick.ReadValue().sqrMagnitude > 0.2f))
+                else if (Gamepad.current != null && (Gamepad.current.buttonSouth.wasPressedThisFrame || Gamepad.current.startButton.wasPressedThisFrame))
+                {
+                    DismissCurrent();
+                }
+                else if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.wasPressedThisFrame)
                 {
                     DismissCurrent();
                 }
@@ -105,6 +132,10 @@ namespace GemmaRainbowSeeker
             if (_messageQueue.Count == 0)
             {
                 _isShowingMessage = false;
+                if (GameSession.Active != null)
+                {
+                    GameSession.Active.IsTutorialBlocking = false;
+                }
                 return;
             }
 
@@ -125,6 +156,32 @@ namespace GemmaRainbowSeeker
             if (bodyText != null) bodyText.text = msg.body;
             if (controlsHintText != null) controlsHintText.text = msg.controlsHint;
 
+            // Handle gameplay pause
+            if (msg.pauseGameplay)
+            {
+                if (GameSession.Active != null)
+                {
+                    GameSession.Active.IsTutorialBlocking = true;
+                }
+            }
+
+            // Handle UI highlight
+            if (!string.IsNullOrEmpty(msg.highlightTarget) && highlightBox != null)
+            {
+                var targetObj = GameObject.Find(msg.highlightTarget);
+                if (targetObj != null && targetObj.transform is RectTransform targetRect)
+                {
+                    highlightBox.position = targetRect.position;
+                    highlightBox.sizeDelta = targetRect.sizeDelta + new Vector2(20f, 20f);
+                    highlightBox.gameObject.SetActive(true);
+                }
+            }
+
+            if (bannerCanvasGroup != null)
+            {
+                bannerCanvasGroup.blocksRaycasts = true;
+            }
+
             // Slide & Fade In
             float elapsed = 0f;
             Vector2 startPos = new Vector2(0f, 150f);
@@ -132,7 +189,7 @@ namespace GemmaRainbowSeeker
 
             while (elapsed < transitionDuration)
             {
-                elapsed += Time.deltaTime;
+                elapsed += Time.unscaledDeltaTime;
                 float t = Mathf.Clamp01(elapsed / transitionDuration);
                 float ease = 1f - Mathf.Pow(1f - t, 3f);
 
@@ -146,11 +203,11 @@ namespace GemmaRainbowSeeker
 
             // Wait until duration elapses or dismissed
             float showTimer = 0f;
-            float maxWait = msg.autoDismissDuration > 0f ? msg.autoDismissDuration : 8.0f;
+            float maxWait = msg.autoDismissDuration > 0f ? msg.autoDismissDuration : (msg.pauseGameplay ? float.MaxValue : 8.0f);
 
             while (showTimer < maxWait && !_dismissCurrentRequested)
             {
-                showTimer += Time.deltaTime;
+                showTimer += Time.unscaledDeltaTime;
                 yield return null;
             }
 
@@ -160,7 +217,7 @@ namespace GemmaRainbowSeeker
 
             while (elapsed < transitionDuration)
             {
-                elapsed += Time.deltaTime;
+                elapsed += Time.unscaledDeltaTime;
                 float t = Mathf.Clamp01(elapsed / transitionDuration);
                 float ease = t * t;
 
@@ -169,10 +226,27 @@ namespace GemmaRainbowSeeker
                 yield return null;
             }
 
-            if (bannerCanvasGroup != null) bannerCanvasGroup.alpha = 0f;
+            if (bannerCanvasGroup != null)
+            {
+                bannerCanvasGroup.alpha = 0f;
+                bannerCanvasGroup.blocksRaycasts = false;
+            }
+
+            if (highlightBox != null)
+            {
+                highlightBox.gameObject.SetActive(false);
+            }
+
+            if (msg.pauseGameplay && GameSession.Active != null)
+            {
+                GameSession.Active.IsTutorialBlocking = false;
+            }
+
+            msg.onDismissed?.Invoke();
 
             _displayRoutine = null;
             ProcessNextMessage();
         }
     }
 }
+

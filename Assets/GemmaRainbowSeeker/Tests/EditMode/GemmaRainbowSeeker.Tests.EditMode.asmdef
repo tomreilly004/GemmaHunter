@@ -3,6 +3,7 @@
     "rootNamespace": "GemmaRainbowSeeker.Tests",
     "references": [
         "GemmaRainbowSeeker.Runtime",
+        "GemmaRainbowSeeker.Editor",
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner"
     ],

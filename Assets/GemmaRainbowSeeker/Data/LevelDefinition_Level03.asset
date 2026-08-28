@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 343e4f5a86c19d844981c5a5cb13c6f1, type: 3}
+  m_Name: LevelDefinition_Level03
+  m_EditorClassIdentifier: GemmaRainbowSeeker.Runtime::GemmaRainbowSeeker.LevelDefinition
+  _levelNumber: 3
+  _displayName: "Level 03 \u2014 Choose Carefully"
+  _sceneName: Level03
+  _objectiveDescription: Collect Orange, Orange, Yellow, Yellow
+  _colourSequence: 01000000010000000200000002000000
+  _targetCompletionTime: 30
+  _rainbowRushTimeWindow: 5.5
+  _twoStarThreshold: 700
+  _threeStarThreshold: 1000
+  _dashEnabled: 0
+  _healthEnabled: 0
+  _currentsEnabled: 0
+  _solidObstaclesEnabled: 0
+  _dangerousHazardsEnabled: 0
+  _enemiesEnabled: 0
+  _rainbowRestsEnabled: 0
+  _tutorialSequence: {fileID: 11400000, guid: 6c3ddda5c9129444588db3202fb0930b, type: 2}
+  _correctGemBasePoints: 100
+  _hazardBreakPoints: 50
+  _rainbowRestFirstActivationPoints: 100
+  _completionHealthBonusPerPip: 150
+  _timeBonusPerSecondUnderPar: 5
+  _comboStart: 1
+  _comboIncrement: 0.25
+  _comboMax: 2.5
+  _comboWrongPenalty: 0.5
+  _comboMin: 1
+  _restartFromRestPenalty: 200

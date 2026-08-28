@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 343e4f5a86c19d844981c5a5cb13c6f1, type: 3}
+  m_Name: LevelDefinition_Level06
+  m_EditorClassIdentifier: GemmaRainbowSeeker.Runtime::GemmaRainbowSeeker.LevelDefinition
+  _levelNumber: 6
+  _displayName: "Level 06 \u2014 Cloud Weave"
+  _sceneName: Level06
+  _objectiveDescription: Collect Red, Red, Orange, Orange, Yellow
+  _colourSequence: 0000000000000000010000000100000002000000
+  _targetCompletionTime: 50
+  _rainbowRushTimeWindow: 4.75
+  _twoStarThreshold: 1400
+  _threeStarThreshold: 2000
+  _dashEnabled: 0
+  _healthEnabled: 0
+  _currentsEnabled: 0
+  _solidObstaclesEnabled: 1
+  _dangerousHazardsEnabled: 0
+  _enemiesEnabled: 0
+  _rainbowRestsEnabled: 0
+  _tutorialSequence: {fileID: 11400000, guid: 5db1343b868e68b4080fb76e8957e188, type: 2}
+  _correctGemBasePoints: 100
+  _hazardBreakPoints: 50
+  _rainbowRestFirstActivationPoints: 100
+  _completionHealthBonusPerPip: 150
+  _timeBonusPerSecondUnderPar: 5
+  _comboStart: 1
+  _comboIncrement: 0.25
+  _comboMax: 2.5
+  _comboWrongPenalty: 0.5
+  _comboMin: 1
+  _restartFromRestPenalty: 200

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80511b5f33321344795e892545441996, type: 3}
+  m_Name: TutorialSequence_Level08
+  m_EditorClassIdentifier: GemmaRainbowSeeker.Runtime::GemmaRainbowSeeker.TutorialSequence
+  _steps:
+  - stepId: L08_Start
+    triggerEvent: 0
+    title: DASH ABILITY
+    body: 'Tap DASH for a burst of speed.
+
+      Dash through cracked purple clouds
+      to break them!'
+    controlsHint: 'DASH: Space / Gamepad South / Dash Button'
+    highlightTargetName: 
+    pauseGameplay: 0
+    showOnce: 1
+    displayDuration: 5

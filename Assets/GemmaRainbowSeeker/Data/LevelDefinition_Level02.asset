@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 343e4f5a86c19d844981c5a5cb13c6f1, type: 3}
+  m_Name: LevelDefinition_Level02
+  m_EditorClassIdentifier: GemmaRainbowSeeker.Runtime::GemmaRainbowSeeker.LevelDefinition
+  _levelNumber: 2
+  _displayName: "Level 02 \u2014 Rainbow Rush"
+  _sceneName: Level02
+  _objectiveDescription: Collect Red, Red, Orange
+  _colourSequence: 000000000000000001000000
+  _targetCompletionTime: 25
+  _rainbowRushTimeWindow: 6
+  _twoStarThreshold: 400
+  _threeStarThreshold: 600
+  _dashEnabled: 0
+  _healthEnabled: 0
+  _currentsEnabled: 0
+  _solidObstaclesEnabled: 0
+  _dangerousHazardsEnabled: 0
+  _enemiesEnabled: 0
+  _rainbowRestsEnabled: 0
+  _tutorialSequence: {fileID: 11400000, guid: b1de68f24200f154daa11fdb73e0fc8d, type: 2}
+  _correctGemBasePoints: 100
+  _hazardBreakPoints: 50
+  _rainbowRestFirstActivationPoints: 100
+  _completionHealthBonusPerPip: 150
+  _timeBonusPerSecondUnderPar: 5
+  _comboStart: 1
+  _comboIncrement: 0.25
+  _comboMax: 2.5
+  _comboWrongPenalty: 0.5
+  _comboMin: 1
+  _restartFromRestPenalty: 200

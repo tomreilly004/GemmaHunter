@@ -47,6 +47,7 @@ namespace GemmaRainbowSeeker
         public bool IsOnCooldown => _cooldownTimer > 0f;
         public float CooldownRemaining => Mathf.Max(0f, _cooldownTimer);
         public float CooldownTotal => dashCooldown;
+        public float CooldownNormalized => dashCooldown > 0f ? Mathf.Clamp01(_cooldownTimer / dashCooldown) : 0f;
         public float DashSpeed => dashSpeed;
         public float DashDuration => dashDuration;
 

@@ -190,22 +190,42 @@ namespace GemmaRainbowSeeker
                 _isCollected = true;
                 _wasBanked = false;
 
-                // Disable visual and collider without destroying GameObject
+                // Disable trigger immediately to prevent double collection
                 if (triggerCollider != null) triggerCollider.enabled = false;
-                if (visual != null) visual.SetVisibility(false);
 
-                // Gemma trail bright flash in this gem's colour for 0.6 seconds
+                // 1. Quick gem scale-up before disappearing
+                if (visual != null)
+                {
+                    visual.PlayCollectAnimation(null);
+                }
+
+                // 2. Gemma trail bright flash in this gem's colour for 0.6 seconds
+                Color gemColor = RainbowColourHelper.GetColor(colour);
                 if (playerObj != null)
                 {
                     var trail = playerObj.GetComponentInParent<GemmaTrail>() ?? playerObj.GetComponentInChildren<GemmaTrail>();
                     if (trail != null)
                     {
-                        trail.SetTrailColour(RainbowColourHelper.GetColor(colour), 0.6f);
+                        trail.SetTrailColour(gemColor, 0.6f);
                     }
                 }
 
-                // Spawn placeholder visual burst
+                // 3. Spawn colour-matched particle burst
                 SpawnBurstEffect();
+
+                // 4. Brief, subtle camera impulse
+                CameraShake2D.Instance?.TriggerShake(0.08f, 0.12f);
+
+                // 5. Score number popup that travels toward HUD
+                int pts = 100;
+                int multiplier = 1;
+                if (session != null)
+                {
+                    int basePts = session.LevelDefinition != null ? session.LevelDefinition.CorrectGemBasePoints : 100;
+                    multiplier = session.RushController != null ? session.RushController.Multiplier : 1;
+                    pts = basePts * multiplier;
+                }
+                FloatingScorePopup.Spawn(transform.position, pts, gemColor, multiplier);
 
                 OnCollected?.Invoke(this);
                 return true;
@@ -219,6 +239,14 @@ namespace GemmaRainbowSeeker
                 if (visual != null)
                 {
                     visual.PlayWrongAttemptFeedback(pushDir);
+                }
+
+                // Specific "Wrong colour — find [TARGET]" message
+                if (session != null && session.RainbowProgress != null && session.RainbowProgress.CurrentTarget.HasValue)
+                {
+                    var target = session.RainbowProgress.CurrentTarget.Value;
+                    string targetHex = RainbowColourHelper.GetHex(target);
+                    session.PostFeedbackMessage($"Wrong colour — find <color={targetHex}>{target.ToString().ToUpper()}</color>", new Color(1f, 0.45f, 0.45f, 1f));
                 }
 
                 OnWrongAttempt?.Invoke(this);

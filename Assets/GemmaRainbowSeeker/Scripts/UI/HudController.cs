@@ -8,29 +8,54 @@ namespace GemmaRainbowSeeker
 {
     /// <summary>
     /// Event-driven controller for the in-game HUD:
-    /// - 7-slot Rainbow Meter along the bottom
+    /// - Dynamic Sequence Rainbow Meter along the bottom
     /// - Current required colour pulsing banner ("NEXT: ORANGE")
     /// - 3-Heart Health display
-    /// - Score and energetic Combo multiplier
+    /// - Score and Large x1–x5 Rainbow Rush Multiplier with countdown meter
     /// - Elapsed time
-    /// - Transient feedback messages
+    /// - Transient feedback messages and "RUSH LOST" alerts
     /// </summary>
     [DisallowMultipleComponent]
     public sealed class HudController : MonoBehaviour
     {
         [Header("Rainbow Meter")]
+        [SerializeField] private RectTransform slotsContainer;
+        [SerializeField] private GameObject slotPrefab;
         [SerializeField] private RainbowMeterSlot[] meterSlots;
         [SerializeField] private TextMeshProUGUI nextTargetText;
+        [SerializeField] private TextMeshProUGUI objectiveText;
+
+        public RectTransform SlotsContainer
+        {
+            get => slotsContainer;
+            set => slotsContainer = value;
+        }
+
+        public GameObject SlotPrefab
+        {
+            get => slotPrefab;
+            set => slotPrefab = value;
+        }
+
+        public TextMeshProUGUI ObjectiveText
+        {
+            get => objectiveText;
+            set => objectiveText = value;
+        }
+
+        private readonly List<RainbowMeterSlot> _dynamicSlots = new List<RainbowMeterSlot>();
+        private GameObject _cachedSlotTemplate;
 
         [Header("Health Display")]
         [SerializeField] private TextMeshProUGUI[] heartIcons;
         [SerializeField] private Color fullHeartColor = new Color(1f, 0.25f, 0.35f, 1f);
         [SerializeField] private Color emptyHeartColor = new Color(0.35f, 0.38f, 0.45f, 0.5f);
 
-        [Header("Score & Combo")]
+        [Header("Score & Rainbow Rush Multiplier")]
         [SerializeField] private TextMeshProUGUI scoreText;
-        [SerializeField] private TextMeshProUGUI comboText;
-        [SerializeField] private RectTransform comboContainer;
+        [SerializeField] private TextMeshProUGUI multiplierText;
+        [SerializeField] private RectTransform multiplierContainer;
+        [SerializeField] private Image rushTimerMeter;
 
         [Header("Timer")]
         [SerializeField] private TextMeshProUGUI timerText;
@@ -41,7 +66,8 @@ namespace GemmaRainbowSeeker
         [SerializeField] private UnityEngine.UI.Image feedbackBg;
 
         private Coroutine _feedbackRoutine;
-        private Coroutine _comboEnergyRoutine;
+        private Coroutine _multiplierEnergyRoutine;
+        private Coroutine _multiplierShakeRoutine;
         private GameSession _session;
         private PlayerHealth _playerHealth;
         private GemmaDash _playerDash;
@@ -64,7 +90,8 @@ namespace GemmaRainbowSeeker
             if (_session != null)
             {
                 _session.OnScoreChanged          += UpdateScore;
-                _session.OnComboChanged          += UpdateCombo;
+                _session.OnMultiplierChanged     += UpdateMultiplier;
+                _session.OnRushTimerUpdated      += UpdateRushTimer;
                 _session.OnTimeUpdated           += UpdateTimer;
                 _session.OnCorrectGemCollected   += HandleCorrectGem;
                 _session.OnWrongGemAttempted     += HandleWrongGem;
@@ -83,7 +110,11 @@ namespace GemmaRainbowSeeker
                 if (_session.ScoreManager != null)
                 {
                     UpdateScore(_session.ScoreManager.Score);
-                    UpdateCombo(_session.ScoreManager.Combo);
+                }
+                if (_session.RushController != null)
+                {
+                    UpdateMultiplier(_session.RushController.Multiplier);
+                    UpdateRushTimer(_session.RushController.RemainingTime, _session.RushController.RushWindow);
                 }
                 if (_session.SessionStats != null)
                 {
@@ -109,10 +140,51 @@ namespace GemmaRainbowSeeker
             }
 
             RefreshRainbowMeter();
+            RefreshHudVisibility();
 
             if (feedbackCanvasGroup != null)
             {
                 feedbackCanvasGroup.alpha = 0f;
+            }
+        }
+
+        public void RefreshHudVisibility()
+        {
+            var session = GameSession.Active;
+            var levelDef = session != null ? session.LevelDefinition : null;
+
+            // 1. Health Display: only visible if HealthEnabled is true
+            bool healthEnabled = levelDef != null ? levelDef.HealthEnabled : true;
+            if (heartIcons != null && heartIcons.Length > 0 && heartIcons[0] != null)
+            {
+                var healthContainer = heartIcons[0].transform.parent?.gameObject;
+                if (healthContainer != null && healthContainer.name.Contains("Health"))
+                {
+                    healthContainer.SetActive(healthEnabled);
+                }
+                else
+                {
+                    foreach (var h in heartIcons)
+                    {
+                        if (h != null) h.gameObject.SetActive(healthEnabled);
+                    }
+                }
+            }
+
+            // 2. Rainbow Rush Display: hidden until introduced (Level >= 2 and RainbowRushTimeWindow > 0)
+            bool rushEnabled = levelDef != null && levelDef.LevelNumber >= 2 && levelDef.RainbowRushTimeWindow > 0f;
+            if (multiplierContainer != null)
+            {
+                multiplierContainer.gameObject.SetActive(rushEnabled);
+            }
+            else if (multiplierText != null)
+            {
+                multiplierText.gameObject.SetActive(rushEnabled);
+            }
+
+            if (rushTimerMeter != null)
+            {
+                rushTimerMeter.gameObject.SetActive(rushEnabled);
             }
         }
 
@@ -121,7 +193,8 @@ namespace GemmaRainbowSeeker
             if (_session != null)
             {
                 _session.OnScoreChanged          -= UpdateScore;
-                _session.OnComboChanged          -= UpdateCombo;
+                _session.OnMultiplierChanged     -= UpdateMultiplier;
+                _session.OnRushTimerUpdated      -= UpdateRushTimer;
                 _session.OnTimeUpdated           -= UpdateTimer;
                 _session.OnCorrectGemCollected   -= HandleCorrectGem;
                 _session.OnWrongGemAttempted     -= HandleWrongGem;
@@ -150,19 +223,143 @@ namespace GemmaRainbowSeeker
 
         // ── Rainbow Meter Refresh ─────────────────────────────────────────────
 
+        public void BuildSequenceMeter(RainbowColour[] sequence)
+        {
+            if (sequence == null || sequence.Length == 0) return;
+
+            // Resolve slotsContainer if not assigned
+            if (slotsContainer == null)
+            {
+                if (meterSlots != null && meterSlots.Length > 0 && meterSlots[0] != null)
+                {
+                    slotsContainer = meterSlots[0].transform.parent as RectTransform;
+                }
+                else
+                {
+                    slotsContainer = (transform.Find("RainbowMeterPanel/SlotsContainer") as RectTransform)
+                                  ?? (transform.Find("SlotsContainer") as RectTransform)
+                                  ?? (GetComponentInChildren<HorizontalLayoutGroup>()?.transform as RectTransform);
+                }
+            }
+
+            if (slotsContainer == null) return;
+
+            // Cache slot template if needed
+            if (slotPrefab == null && _cachedSlotTemplate == null)
+            {
+                if (meterSlots != null && meterSlots.Length > 0 && meterSlots[0] != null)
+                {
+                    _cachedSlotTemplate = meterSlots[0].gameObject;
+                }
+                else if (slotsContainer.childCount > 0)
+                {
+                    _cachedSlotTemplate = slotsContainer.GetChild(0).gameObject;
+                }
+            }
+
+            // Clear existing slots
+            _dynamicSlots.Clear();
+            for (int i = slotsContainer.childCount - 1; i >= 0; i--)
+            {
+                var child = slotsContainer.GetChild(i).gameObject;
+                if (Application.isPlaying) Destroy(child);
+                else DestroyImmediate(child);
+            }
+
+            // Sizing based on sequence length (1-10 gems)
+            int count = sequence.Length;
+            float slotSize = count <= 5 ? 64f : (count <= 7 ? 60f : (count <= 8 ? 56f : (count <= 9 ? 52f : 48f)));
+            float fontSize = count <= 5 ? 32f : (count <= 7 ? 30f : (count <= 8 ? 28f : (count <= 9 ? 26f : 24f)));
+            float spacing  = count <= 6 ? 14f : (count <= 8 ? 10f : 6f);
+
+            var hlg = slotsContainer.GetComponent<HorizontalLayoutGroup>();
+            if (hlg != null)
+            {
+                hlg.spacing = spacing;
+                hlg.childAlignment = TextAnchor.MiddleCenter;
+                hlg.childControlWidth = false;
+                hlg.childControlHeight = false;
+                hlg.childForceExpandWidth = false;
+                hlg.childForceExpandHeight = false;
+            }
+
+            // Instantiate dynamic slots
+            for (int i = 0; i < count; i++)
+            {
+                GameObject slotObj;
+                if (slotPrefab != null)
+                {
+                    slotObj = Instantiate(slotPrefab, slotsContainer);
+                }
+                else if (_cachedSlotTemplate != null)
+                {
+                    slotObj = Instantiate(_cachedSlotTemplate, slotsContainer);
+                }
+                else
+                {
+                    slotObj = new GameObject($"Slot_{i}_{sequence[i]}", typeof(RectTransform));
+                    slotObj.transform.SetParent(slotsContainer, false);
+                    slotObj.AddComponent<RainbowMeterSlot>();
+                }
+
+                slotObj.name = $"Slot_{i}_{sequence[i]}";
+                slotObj.SetActive(true);
+
+                var slot = slotObj.GetComponent<RainbowMeterSlot>();
+                if (slot != null)
+                {
+                    slot.Initialize(sequence[i]);
+                    slot.SetSize(new Vector2(slotSize, slotSize), fontSize);
+                    _dynamicSlots.Add(slot);
+                }
+            }
+        }
+
         public void RefreshRainbowMeter()
         {
-            if (meterSlots == null || meterSlots.Length == 0) return;
+            if (_session == null)
+            {
+                _session = GameSession.Active;
+            }
 
             var progress = _session != null ? _session.RainbowProgress : null;
+            string objDescription = _session != null && _session.LevelDefinition != null 
+                ? _session.LevelDefinition.ObjectiveDescription 
+                : "Collect 1 red gem";
+
+            if (objectiveText != null)
+            {
+                objectiveText.text = objDescription;
+            }
+
             if (progress == null)
             {
-                for (int i = 0; i < meterSlots.Length; i++)
+                for (int i = 0; i < _dynamicSlots.Count; i++)
                 {
-                    meterSlots[i]?.SetState(RainbowMeterSlot.SlotState.Empty);
+                    _dynamicSlots[i]?.SetState(RainbowMeterSlot.SlotState.Empty);
                 }
-                if (nextTargetText != null) nextTargetText.text = "NEXT: RED";
+                if (nextTargetText != null)
+                {
+                    nextTargetText.text = objectiveText != null ? "NEXT: RED" : $"{objDescription} | NEXT: RED";
+                }
                 return;
+            }
+
+            // Check if slots need to be rebuilt
+            if (_dynamicSlots.Count != progress.TotalCount)
+            {
+                BuildSequenceMeter(progress.Sequence);
+            }
+            else
+            {
+                for (int i = 0; i < progress.TotalCount; i++)
+                {
+                    if (_dynamicSlots[i] == null || _dynamicSlots[i].Colour != progress.GetColourAt(i))
+                    {
+                        BuildSequenceMeter(progress.Sequence);
+                        break;
+                    }
+                }
             }
 
             int collected = progress.CollectedCount;
@@ -170,9 +367,9 @@ namespace GemmaRainbowSeeker
             bool isComplete = progress.IsComplete;
             RainbowColour? target = progress.CurrentTarget;
 
-            for (int i = 0; i < meterSlots.Length; i++)
+            for (int i = 0; i < _dynamicSlots.Count; i++)
             {
-                var slot = meterSlots[i];
+                var slot = _dynamicSlots[i];
                 if (slot == null) continue;
 
                 if (i < banked)
@@ -197,13 +394,20 @@ namespace GemmaRainbowSeeker
             {
                 if (isComplete)
                 {
-                    nextTargetText.text = "<color=#FFE666>★ ALL COLOURS COLLECTED! ENTER GATE! ★</color>";
+                    nextTargetText.text = "<color=#FFE666>ALL GEMS COLLECTED! ENTER GATE!</color>";
                 }
                 else if (target.HasValue)
                 {
                     string name = target.Value.ToString().ToUpper();
                     string hex = RainbowColourHelper.GetHex(target.Value);
-                    nextTargetText.text = $"NEXT: <color={hex}>{name}</color>";
+                    if (objectiveText != null)
+                    {
+                        nextTargetText.text = $"NEXT: <color={hex}>{name}</color> ({collected + 1}/{progress.TotalCount})";
+                    }
+                    else
+                    {
+                        nextTargetText.text = $"<b>{objDescription}</b> | NEXT: <color={hex}>{name}</color> ({collected + 1}/{progress.TotalCount})";
+                    }
                 }
             }
         }
@@ -231,7 +435,7 @@ namespace GemmaRainbowSeeker
             }
         }
 
-        // ── Score & Combo ─────────────────────────────────────────────────────
+        // ── Score & Multiplier ────────────────────────────────────────────────
 
         public void UpdateScore(int score)
         {
@@ -241,47 +445,89 @@ namespace GemmaRainbowSeeker
             }
         }
 
-        public void UpdateCombo(float combo)
+        public void UpdateMultiplier(int multiplier)
         {
-            if (comboText != null)
+            var txt = multiplierText;
+            if (txt == null)
             {
-                comboText.text = $"COMBO: x{combo:F2}";
+                // Fallback lookup if not assigned
+                txt = transform.Find("TopBar/ScoreComboDisplay/ComboText")?.GetComponent<TextMeshProUGUI>();
+            }
 
-                if (combo > 1.0f)
+            if (txt != null)
+            {
+                if (multiplier >= 5)
                 {
-                    // Vibrant yellow/gold energetic display
-                    comboText.color = new Color(1.0f, 0.88f, 0.2f, 1f);
-                    if (isActiveAndEnabled)
+                    txt.text = "<color=#FFE640>MAX RUSH x5</color>";
+                }
+                else if (multiplier > 1)
+                {
+                    string colorHex = multiplier switch
                     {
-                        if (_comboEnergyRoutine != null) StopCoroutine(_comboEnergyRoutine);
-                        _comboEnergyRoutine = StartCoroutine(ComboBounceRoutine(combo));
-                    }
+                        2 => "#4FFFA4",
+                        3 => "#52E5FF",
+                        4 => "#FFB240",
+                        _ => "#FFE640"
+                    };
+                    txt.text = $"<color={colorHex}>RUSH x{multiplier}</color>";
                 }
                 else
                 {
-                    comboText.color = new Color(0.75f, 0.8f, 0.9f, 0.8f);
-                    if (comboContainer != null) comboContainer.localScale = Vector3.one;
+                    txt.text = "RUSH: x1";
+                    txt.color = new Color(0.75f, 0.8f, 0.9f, 0.8f);
+                }
+
+                if (multiplierContainer == null)
+                {
+                    multiplierContainer = txt.transform.parent as RectTransform;
+                }
+
+                if (multiplier > 1 && isActiveAndEnabled && Application.isPlaying)
+                {
+                    if (_multiplierEnergyRoutine != null) StopCoroutine(_multiplierEnergyRoutine);
+                    _multiplierEnergyRoutine = StartCoroutine(MultiplierBounceRoutine(multiplier));
+                }
+                else if (multiplierContainer != null)
+                {
+                    multiplierContainer.localScale = Vector3.one;
                 }
             }
         }
 
-        private IEnumerator ComboBounceRoutine(float combo)
+        public void UpdateRushTimer(float remainingTime, float totalWindow)
         {
-            if (comboContainer == null) yield break;
+            if (rushTimerMeter != null)
+            {
+                if (totalWindow > 0.001f && remainingTime > 0f)
+                {
+                    rushTimerMeter.fillAmount = Mathf.Clamp01(remainingTime / totalWindow);
+                    rushTimerMeter.gameObject.SetActive(true);
+                }
+                else
+                {
+                    rushTimerMeter.fillAmount = 0f;
+                    rushTimerMeter.gameObject.SetActive(false);
+                }
+            }
+        }
 
-            float intensity = Mathf.Lerp(1.15f, 1.35f, (combo - 1f) / 1.5f);
-            comboContainer.localScale = Vector3.one * intensity;
+        private IEnumerator MultiplierBounceRoutine(int multiplier)
+        {
+            if (multiplierContainer == null) yield break;
+
+            float intensity = multiplier >= 5 ? 1.45f : 1.15f + (multiplier - 1) * 0.08f;
+            multiplierContainer.localScale = Vector3.one * intensity;
 
             float elapsed = 0f;
-            float duration = 0.2f;
+            float duration = 0.22f;
             while (elapsed < duration)
             {
                 elapsed += Time.deltaTime;
-                comboContainer.localScale = Vector3.Lerp(Vector3.one * intensity, Vector3.one, elapsed / duration);
+                multiplierContainer.localScale = Vector3.Lerp(Vector3.one * intensity, Vector3.one, elapsed / duration);
                 yield return null;
             }
-            comboContainer.localScale = Vector3.one;
-            _comboEnergyRoutine = null;
+            multiplierContainer.localScale = Vector3.one;
+            _multiplierEnergyRoutine = null;
         }
 
         // ── Timer ─────────────────────────────────────────────────────────────
@@ -346,11 +592,52 @@ namespace GemmaRainbowSeeker
             _feedbackRoutine = null;
         }
 
+        public void ShakeMultiplierDisplay()
+        {
+            if (multiplierContainer == null && multiplierText != null)
+            {
+                multiplierContainer = multiplierText.transform.parent as RectTransform;
+            }
+            if (multiplierContainer == null || !isActiveAndEnabled || !Application.isPlaying) return;
+
+            if (_multiplierShakeRoutine != null)
+            {
+                StopCoroutine(_multiplierShakeRoutine);
+            }
+            _multiplierShakeRoutine = StartCoroutine(MultiplierShakeRoutine());
+        }
+
+        private IEnumerator MultiplierShakeRoutine()
+        {
+            Vector3 originalLocalPos = multiplierContainer.localPosition;
+            float duration = 0.25f;
+            float elapsed = 0f;
+            float magnitude = 8.0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float progress = elapsed / duration;
+                float damp = 1f - progress;
+                float xOffset = Mathf.Sin(progress * Mathf.PI * 8f) * magnitude * damp;
+                multiplierContainer.localPosition = originalLocalPos + new Vector3(xOffset, 0f, 0f);
+                yield return null;
+            }
+
+            multiplierContainer.localPosition = originalLocalPos;
+            _multiplierShakeRoutine = null;
+        }
+
         private void HandleCorrectGem(RainbowColour col) => RefreshRainbowMeter();
-        private void HandleWrongGem(RainbowColour col) => RefreshRainbowMeter();
+        private void HandleWrongGem(RainbowColour col)
+        {
+            RefreshRainbowMeter();
+            ShakeMultiplierDisplay();
+        }
         private void HandleProgressBanked() => RefreshRainbowMeter();
         private void HandleProgressRestored() => RefreshRainbowMeter();
         private void HandleProgressReset() => RefreshRainbowMeter();
         private void HandleDashRecharged() => ShowFeedbackMessage("DASH READY! [SPACE]", new Color(0.4f, 1.0f, 0.85f, 1f));
     }
 }
+

@@ -70,8 +70,22 @@ namespace GemmaRainbowSeeker
             SetState(_currentState);
         }
 
+        public void SetSize(Vector2 size, float fontSize = 0f)
+        {
+            var rt = GetComponent<RectTransform>();
+            if (rt != null)
+            {
+                rt.sizeDelta = size;
+            }
+            if (letterText != null && fontSize > 0f)
+            {
+                letterText.fontSize = fontSize;
+            }
+        }
+
         public void SetState(SlotState newState)
         {
+            SlotState prevState = _currentState;
             _currentState = newState;
 
             if (_pulseRoutine != null)
@@ -99,7 +113,7 @@ namespace GemmaRainbowSeeker
                     if (slotOutline != null) slotOutline.color = highlightOutlineColor;
                     if (letterText != null) letterText.color = Color.white;
                     if (lockText != null) lockText.gameObject.SetActive(false);
-                    if (isActiveAndEnabled)
+                    if (isActiveAndEnabled && Application.isPlaying)
                     {
                         _pulseRoutine = StartCoroutine(PulseRoutine());
                     }
@@ -110,6 +124,10 @@ namespace GemmaRainbowSeeker
                     if (slotOutline != null) slotOutline.color = Color.white;
                     if (letterText != null) letterText.color = Color.white;
                     if (lockText != null) lockText.gameObject.SetActive(false);
+                    if (prevState != SlotState.Collected && isActiveAndEnabled && Application.isPlaying)
+                    {
+                        StartCoroutine(BounceRoutine());
+                    }
                     break;
 
                 case SlotState.Banked:
@@ -121,8 +139,33 @@ namespace GemmaRainbowSeeker
                         lockText.gameObject.SetActive(true);
                         lockText.text = "🔒";
                     }
+                    if (prevState != SlotState.Banked && isActiveAndEnabled && Application.isPlaying)
+                    {
+                        StartCoroutine(BounceRoutine());
+                    }
                     break;
             }
+        }
+
+        private IEnumerator BounceRoutine()
+        {
+            if (containerTransform == null) yield break;
+
+            Vector3 peakScale = _baseScale * 1.35f;
+            float duration = 0.22f;
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                // Elastic bounce curve: sin(t * pi) with settle
+                float curve = Mathf.Sin(t * Mathf.PI);
+                containerTransform.localScale = Vector3.Lerp(_baseScale, peakScale, curve);
+                yield return null;
+            }
+
+            containerTransform.localScale = _baseScale;
         }
 
         private IEnumerator PulseRoutine()

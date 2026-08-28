@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 namespace GemmaRainbowSeeker
@@ -46,9 +47,12 @@ namespace GemmaRainbowSeeker
 
         private GemmaMotor2D _motor;
         private GemmaDash _dash;
+        private SpriteRenderer _spriteRenderer;
         private Vector3 _currentScale;
         private float _currentTiltAngle;
         private bool _facingRight = true;
+        private Coroutine _rechargeFlashRoutine;
+        private Color _baseSpriteColor = Color.white;
 
         public bool FacingRight => _facingRight;
 
@@ -56,6 +60,8 @@ namespace GemmaRainbowSeeker
         {
             _motor = GetComponentInParent<GemmaMotor2D>();
             _dash = GetComponentInParent<GemmaDash>();
+            _spriteRenderer = GetComponent<SpriteRenderer>();
+            if (_spriteRenderer != null) _baseSpriteColor = _spriteRenderer.color;
             _currentScale = baseScale;
         }
 
@@ -64,6 +70,7 @@ namespace GemmaRainbowSeeker
             if (_dash != null)
             {
                 _dash.OnDashStarted += HandleDashStarted;
+                _dash.OnDashRecharged += HandleDashRecharged;
             }
         }
 
@@ -72,18 +79,49 @@ namespace GemmaRainbowSeeker
             if (_dash != null)
             {
                 _dash.OnDashStarted -= HandleDashStarted;
+                _dash.OnDashRecharged -= HandleDashRecharged;
             }
         }
 
         private void HandleDashStarted(Vector2 dir)
         {
             // Instant burst stretch on dash start
-            _currentScale = new Vector3(maxStretch * 1.1f, minSquash * 0.9f, 1f);
+            _currentScale = new Vector3(maxStretch * 1.15f, minSquash * 0.85f, 1f);
+        }
+
+        private void HandleDashRecharged()
+        {
+            if (isActiveAndEnabled && Application.isPlaying)
+            {
+                if (_rechargeFlashRoutine != null) StopCoroutine(_rechargeFlashRoutine);
+                _rechargeFlashRoutine = StartCoroutine(RechargeFlashRoutine());
+            }
+        }
+
+        private IEnumerator RechargeFlashRoutine()
+        {
+            if (_spriteRenderer == null) yield break;
+
+            Color flashColor = new Color(0.6f, 1.0f, 0.9f, 1.0f);
+            float duration = 0.18f;
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Sin((elapsed / duration) * Mathf.PI);
+                _spriteRenderer.color = Color.Lerp(_baseSpriteColor, flashColor, t * 0.6f);
+                yield return null;
+            }
+
+            _spriteRenderer.color = _baseSpriteColor;
+            _rechargeFlashRoutine = null;
         }
 
         private void Update()
         {
             Vector2 vel = _motor != null ? _motor.Velocity : Vector2.zero;
+            Vector2 input = _motor != null ? _motor.MoveInput : Vector2.zero;
             float speed = vel.magnitude;
             float maxSpeed = _motor != null ? _motor.MaxSpeed : 5.8f;
 
@@ -111,23 +149,32 @@ namespace GemmaRainbowSeeker
             float yRotation = _facingRight ? 0f : 180f;
             transform.localRotation = Quaternion.Euler(0f, yRotation, _currentTiltAngle);
 
-            // 2. Squash & Stretch target
+            // 2. Squash & Stretch target (Acceleration vs Deceleration)
             Vector3 targetScale = baseScale;
 
             if (_dash != null && _dash.IsDashing)
             {
                 targetScale = new Vector3(maxStretch, minSquash, 1f);
             }
-            else if (speed > 0.5f)
+            else if (input.sqrMagnitude > 0.01f && speed > 0.3f)
             {
+                // Accelerating: stretch along forward vector
                 float speedFactor = Mathf.Clamp01(speed / maxSpeed);
-                float stretchX = Mathf.Lerp(1f, maxStretch, speedFactor * 0.5f);
-                float squashY = Mathf.Lerp(1f, minSquash, speedFactor * 0.5f);
+                float stretchX = Mathf.Lerp(1f, maxStretch, speedFactor * 0.6f);
+                float squashY = Mathf.Lerp(1f, minSquash, speedFactor * 0.6f);
+                targetScale = new Vector3(stretchX, squashY, 1f);
+            }
+            else if (speed > 0.3f)
+            {
+                // Decelerating (input released or opposing): smoothly relax toward normal shape
+                float speedFactor = Mathf.Clamp01(speed / maxSpeed);
+                float stretchX = Mathf.Lerp(1f, 1.05f, speedFactor);
+                float squashY = Mathf.Lerp(1f, 0.95f, speedFactor);
                 targetScale = new Vector3(stretchX, squashY, 1f);
             }
             else
             {
-                // Idle buoyancy wave
+                // Idle buoyancy breathing wave without altering physics position
                 float bob = Mathf.Sin(Time.time * bobFrequency) * bobAmplitude;
                 targetScale = baseScale + new Vector3(bob * 0.5f, bob, 0f);
             }

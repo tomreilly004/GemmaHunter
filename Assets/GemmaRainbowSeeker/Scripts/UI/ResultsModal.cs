@@ -30,6 +30,7 @@ namespace GemmaRainbowSeeker
         [Header("Buttons")]
         [SerializeField] private UnityEngine.UI.Button retryLevelButton;
         [SerializeField] private UnityEngine.UI.Button continueButton;
+        [SerializeField] private UnityEngine.UI.Button levelSelectButton;
 
         private void Awake()
         {
@@ -48,6 +49,11 @@ namespace GemmaRainbowSeeker
             if (continueButton != null)
             {
                 continueButton.onClick.AddListener(OnContinueClicked);
+            }
+
+            if (levelSelectButton != null)
+            {
+                levelSelectButton.onClick.AddListener(OnLevelSelectClicked);
             }
 
             if (statusNoticeText != null)
@@ -74,6 +80,13 @@ namespace GemmaRainbowSeeker
 
         public void DisplayResults(LevelCompletionData data)
         {
+            int levelNum = GameSession.Active != null && GameSession.Active.LevelDefinition != null
+                ? GameSession.Active.LevelDefinition.LevelNumber
+                : 1;
+
+            // Persist progress to local SaveManager
+            SaveManager.RecordLevelResult(levelNum, data.finalScore, data.starRating);
+
             if (resultsCanvasGroup != null)
             {
                 resultsCanvasGroup.alpha = 1f;
@@ -100,7 +113,7 @@ namespace GemmaRainbowSeeker
 
             if (gemsStatsText != null)
             {
-                gemsStatsText.text = $"Gems Collected: {data.correctGems} / 7";
+                gemsStatsText.text = $"Gems Collected: {data.correctGems}";
             }
 
             if (mistakesStatsText != null)
@@ -124,11 +137,11 @@ namespace GemmaRainbowSeeker
                 for (int i = 0; i < 3; i++)
                 {
                     if (i < data.starRating)
-                        starsString += "<color=#FFD700>★</color> ";
+                        starsString += "<color=#FFD700>*</color> ";
                     else
-                        starsString += "<color=#555C6E>☆</color> ";
+                        starsString += "<color=#555C6E>-</color> ";
                 }
-                starRatingText.text = $"STAR RATING: {starsString}";
+                starRatingText.text = $"STAR RATING: {data.starRating}/3 ({starsString.TrimEnd()})";
             }
 
             if (statusNoticeText != null)
@@ -154,9 +167,53 @@ namespace GemmaRainbowSeeker
 
         private void OnContinueClicked()
         {
-            if (statusNoticeText != null)
+            int currentLevel = GameSession.Active != null && GameSession.Active.LevelDefinition != null
+                ? GameSession.Active.LevelDefinition.LevelNumber
+                : 1;
+            int nextLevel = currentLevel + 1;
+            string nextSceneName = $"Level{nextLevel:D2}";
+
+            if (nextLevel <= 10 && Application.CanStreamedLevelBeLoaded(nextSceneName))
             {
-                statusNoticeText.text = "<color=#36A7FF>Level 2 is currently in development! You can Retry Level to aim for 3 stars.</color>";
+                if (resultsCanvasGroup != null)
+                {
+                    resultsCanvasGroup.alpha = 0f;
+                    resultsCanvasGroup.blocksRaycasts = false;
+                    resultsCanvasGroup.interactable = false;
+                }
+                SceneManager.LoadScene(nextSceneName);
+                return;
+            }
+
+            var ui = UIManager.Instance;
+            if (ui != null && ui.LevelSelect != null)
+            {
+                if (resultsCanvasGroup != null)
+                {
+                    resultsCanvasGroup.alpha = 0f;
+                    resultsCanvasGroup.blocksRaycasts = false;
+                    resultsCanvasGroup.interactable = false;
+                }
+                ui.LevelSelect.OpenLevelSelect();
+            }
+            else if (statusNoticeText != null)
+            {
+                statusNoticeText.text = "<color=#36A7FF>Next level unlocked in Level Select!</color>";
+            }
+        }
+
+        private void OnLevelSelectClicked()
+        {
+            var ui = UIManager.Instance;
+            if (ui != null && ui.LevelSelect != null)
+            {
+                if (resultsCanvasGroup != null)
+                {
+                    resultsCanvasGroup.alpha = 0f;
+                    resultsCanvasGroup.blocksRaycasts = false;
+                    resultsCanvasGroup.interactable = false;
+                }
+                ui.LevelSelect.OpenLevelSelect();
             }
         }
     }

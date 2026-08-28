@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80511b5f33321344795e892545441996, type: 3}
+  m_Name: TutorialSequence_Level05
+  m_EditorClassIdentifier: GemmaRainbowSeeker.Runtime::GemmaRainbowSeeker.TutorialSequence
+  _steps:
+  - stepId: L05_Start
+    triggerEvent: 0
+    title: MAKE A RAINBOW
+    body: 'Pass through a Rainbow Rest to bank your colours.
+
+      Complete all
+      seven colours to open the Gate.'
+    controlsHint: 'Sequence: R -> O -> Y -> G -> B -> I -> V'
+    highlightTargetName: 
+    pauseGameplay: 0
+    showOnce: 1
+    displayDuration: 5
+  - stepId: L05_Gate
+    triggerEvent: 6
+    title: RAINBOW COMPLETE!
+    body: All seven colours collected! Fly through the Rainbow Gate to finish!
+    controlsHint: 
+    highlightTargetName: 
+    pauseGameplay: 0
+    showOnce: 1
+    displayDuration: 4.5

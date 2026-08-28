@@ -101,8 +101,13 @@ namespace GemmaRainbowSeeker
             _currentHealth = Mathf.Max(0, _currentHealth - amount);
             OnHealthChanged?.Invoke(_currentHealth, maxHealth);
 
-            // Record damage in LevelSessionStats via GameSession
-            GameSession.Active?.SessionStats?.RecordDamageTaken();
+            // Record damage in LevelSessionStats and reset Rush via GameSession
+            var session = GameSession.Active;
+            if (session != null)
+            {
+                session.SessionStats?.RecordDamageTaken();
+                session.RushController?.ResetRush(RushResetReason.Damage);
+            }
 
             // Apply readable knockback
             ApplyKnockback(knockbackDirection);
@@ -265,6 +270,7 @@ namespace GemmaRainbowSeeker
                 _dash.CancelDash();
             }
 
+            GameSession.Active?.RushController?.ResetRush(RushResetReason.KnockedOut);
             OnKnockedOut?.Invoke();
         }
     }

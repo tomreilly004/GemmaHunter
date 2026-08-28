@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 343e4f5a86c19d844981c5a5cb13c6f1, type: 3}
+  m_Name: LevelDefinition_Level04
+  m_EditorClassIdentifier: GemmaRainbowSeeker.Runtime::GemmaRainbowSeeker.LevelDefinition
+  _levelNumber: 4
+  _displayName: "Level 04 \u2014 Stay In Flow"
+  _sceneName: Level04
+  _objectiveDescription: Collect Yellow, Yellow, Green, Green, Blue
+  _colourSequence: 0200000002000000030000000300000004000000
+  _targetCompletionTime: 35
+  _rainbowRushTimeWindow: 5
+  _twoStarThreshold: 1100
+  _threeStarThreshold: 1500
+  _dashEnabled: 0
+  _healthEnabled: 0
+  _currentsEnabled: 1
+  _solidObstaclesEnabled: 0
+  _dangerousHazardsEnabled: 0
+  _enemiesEnabled: 0
+  _rainbowRestsEnabled: 0
+  _tutorialSequence: {fileID: 11400000, guid: ae24afb54ccaaff43918e669c037b323, type: 2}
+  _correctGemBasePoints: 100
+  _hazardBreakPoints: 50
+  _rainbowRestFirstActivationPoints: 100
+  _completionHealthBonusPerPip: 150
+  _timeBonusPerSecondUnderPar: 5
+  _comboStart: 1
+  _comboIncrement: 0.25
+  _comboMax: 2.5
+  _comboWrongPenalty: 0.5
+  _comboMin: 1
+  _restartFromRestPenalty: 200

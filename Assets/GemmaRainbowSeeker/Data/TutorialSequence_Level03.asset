@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 80511b5f33321344795e892545441996, type: 3}
+  m_Name: TutorialSequence_Level03
+  m_EditorClassIdentifier: GemmaRainbowSeeker.Runtime::GemmaRainbowSeeker.TutorialSequence
+  _steps:
+  - stepId: L03_Start
+    triggerEvent: 0
+    title: CHOOSE CAREFULLY
+    body: 'Collect the colour shown in the meter.
+
+      A wrong colour resets Rainbow
+      Rush.'
+    controlsHint: 'Sequence: Orange -> Orange -> Yellow -> Yellow'
+    highlightTargetName: 
+    pauseGameplay: 0
+    showOnce: 1
+    displayDuration: 4.5
+  - stepId: L03_Wrong
+    triggerEvent: 2
+    title: WRONG COLOUR
+    body: 'Touching a wrong colour resets Rainbow Rush to x1.
+
+      Check the meter
+      to stay on target!'
+    controlsHint: 
+    highlightTargetName: 
+    pauseGameplay: 0
+    showOnce: 1
+    displayDuration: 4.5

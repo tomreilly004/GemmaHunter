@@ -11,6 +11,18 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/GemmaRainbowSeeker/Scenes/Level01.unity
     guid: 949daa0999e920848b502da4ed91c82d
+  - enabled: 1
+    path: Assets/GemmaRainbowSeeker/Scenes/Level02.unity
+    guid: e1378761223020042915da44e2c9e0c2
+  - enabled: 1
+    path: Assets/GemmaRainbowSeeker/Scenes/Level03.unity
+    guid: 370c5f75dbbc6af4487b46685dca1eb8
+  - enabled: 1
+    path: Assets/GemmaRainbowSeeker/Scenes/Level04.unity
+    guid: e924c8a2a92e4114a924ec0a7280f5b4
+  - enabled: 1
+    path: Assets/GemmaRainbowSeeker/Scenes/Level05.unity
+    guid: 65623d8edb0ec9440a45010267188eea
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
   m_UseUCBPForAssetBundles: 0

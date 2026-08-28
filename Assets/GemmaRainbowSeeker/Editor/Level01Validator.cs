@@ -229,13 +229,14 @@ namespace GemmaRainbowSeeker.Editor
                 return;
             }
 
-            if (session.LevelRules == null)
+            if (session.LevelDefinition == null && session.LevelRules == null)
             {
-                report.Errors.Add("GameSession has no LevelRules asset assigned.");
+                report.Errors.Add("GameSession has no LevelDefinition/LevelRules asset assigned.");
             }
             else
             {
-                report.Passes.Add($"GameSession verified with LevelRules '{session.LevelRules.name}'.");
+                string name = session.LevelDefinition != null ? session.LevelDefinition.name : session.LevelRules.name;
+                report.Passes.Add($"GameSession verified with LevelDefinition '{name}'.");
             }
         }
 

@@ -1,0 +1,42 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 343e4f5a86c19d844981c5a5cb13c6f1, type: 3}
+  m_Name: LevelDefinition_Level09
+  m_EditorClassIdentifier: GemmaRainbowSeeker.Runtime::GemmaRainbowSeeker.LevelDefinition
+  _levelNumber: 9
+  _displayName: "Level 09 \u2014 Gloom Patrol"
+  _sceneName: Level09
+  _objectiveDescription: Collect Red, Orange, Yellow, Green, Blue, Indigo
+  _colourSequence: 000000000100000002000000030000000400000005000000
+  _targetCompletionTime: 65
+  _rainbowRushTimeWindow: 4.25
+  _twoStarThreshold: 2200
+  _threeStarThreshold: 3200
+  _dashEnabled: 1
+  _healthEnabled: 1
+  _currentsEnabled: 0
+  _solidObstaclesEnabled: 1
+  _dangerousHazardsEnabled: 1
+  _enemiesEnabled: 1
+  _rainbowRestsEnabled: 1
+  _tutorialSequence: {fileID: 11400000, guid: 1e650d2250a700d478d67d98762ba62a, type: 2}
+  _correctGemBasePoints: 100
+  _hazardBreakPoints: 50
+  _rainbowRestFirstActivationPoints: 100
+  _completionHealthBonusPerPip: 150
+  _timeBonusPerSecondUnderPar: 5
+  _comboStart: 1
+  _comboIncrement: 0.25
+  _comboMax: 2.5
+  _comboWrongPenalty: 0.5
+  _comboMin: 1
+  _restartFromRestPenalty: 200

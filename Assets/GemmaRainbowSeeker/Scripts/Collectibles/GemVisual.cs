@@ -128,6 +128,50 @@ namespace GemmaRainbowSeeker
         }
 
         /// <summary>
+        /// Plays a quick scale-up punch and fade before disappearing.
+        /// </summary>
+        public void PlayCollectAnimation(System.Action onComplete)
+        {
+            if (isActiveAndEnabled && Application.isPlaying)
+            {
+                StartCoroutine(CollectAnimationRoutine(onComplete));
+            }
+            else
+            {
+                SetVisibility(false);
+                onComplete?.Invoke();
+            }
+        }
+
+        private IEnumerator CollectAnimationRoutine(System.Action onComplete)
+        {
+            Vector3 startScale = transform.localScale;
+            Vector3 peakScale = _baseScale * 1.45f;
+            float duration = 0.12f;
+            float elapsed = 0f;
+
+            while (elapsed < duration)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / duration);
+                transform.localScale = Vector3.Lerp(startScale, peakScale, t);
+
+                if (glowRenderer != null)
+                {
+                    Color gc = _baseColor;
+                    gc.a = Mathf.Lerp(0.5f, 1.0f, t);
+                    glowRenderer.color = gc;
+                }
+
+                yield return null;
+            }
+
+            SetVisibility(false);
+            transform.localScale = _baseScale;
+            onComplete?.Invoke();
+        }
+
+        /// <summary>
         /// Plays the wrong-attempt feedback: pale grey flash, recoil shake, and recovers.
         /// </summary>
         public void PlayWrongAttemptFeedback(Vector2 recoilDirection)

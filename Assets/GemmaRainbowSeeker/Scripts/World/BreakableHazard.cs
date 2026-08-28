@@ -21,6 +21,17 @@ namespace GemmaRainbowSeeker
         [Tooltip("Main sprite renderer representing the hazard.")]
         [SerializeField] private SpriteRenderer mainRenderer;
 
+        [Header("Breakable Visuals")]
+        [Tooltip("Color of the glowing cracked cloud.")]
+        [SerializeField] private Color crackedBaseColor = new Color(0.65f, 0.35f, 0.85f, 0.95f);
+
+        [Tooltip("Glow color of the active cracks.")]
+        [SerializeField] private Color crackGlowColor = new Color(0.95f, 0.55f, 1.0f, 1.0f);
+
+        [Tooltip("Frequency of crack glow pulsing.")]
+        [Range(0.5f, 10f)]
+        [SerializeField] private float crackPulseSpeed = 3.2f;
+
         private bool _isBroken;
         private bool _wasBanked;
         private GameSession _session;
@@ -35,6 +46,17 @@ namespace GemmaRainbowSeeker
         {
             base.Awake();
             EnsureBreakableComponents();
+            _timeOffset = UnityEngine.Random.Range(0f, 5f);
+        }
+
+        protected override void Update()
+        {
+            if (!_isBroken && mainRenderer != null)
+            {
+                // Pulsing glowing purple/magenta cracks
+                float t = 0.5f + 0.5f * Mathf.Sin((Time.time + _timeOffset) * crackPulseSpeed);
+                mainRenderer.color = Color.Lerp(crackedBaseColor, crackGlowColor, t);
+            }
         }
 
         private void EnsureBreakableComponents()

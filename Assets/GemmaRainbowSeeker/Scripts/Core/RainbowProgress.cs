@@ -1,9 +1,13 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace GemmaRainbowSeeker
 {
     /// <summary>
-    /// Tracks Gemma's progress through the ordered rainbow sequence.
+    /// Tracks Gemma's progress through an ordered rainbow sequence from a LevelDefinition.
+    /// Supports sequences of any length (1 to 10+), repeated colours (e.g. Red, Red, Orange),
+    /// banking at checkpoints, and resetting.
     /// Pure C# — no MonoBehaviour or Unity dependency.
     /// </summary>
     public sealed class RainbowProgress
@@ -15,7 +19,7 @@ namespace GemmaRainbowSeeker
 
         // ── Events ────────────────────────────────────────────────────────────
 
-        /// <summary>Raised when the collected count changes (correct collection or restore).</summary>
+        /// <summary>Raised when the collected count changes (correct collection, restore, or reset).</summary>
         public event Action ProgressChanged;
 
         /// <summary>Raised when the current target colour changes.</summary>
@@ -33,7 +37,7 @@ namespace GemmaRainbowSeeker
         /// <summary>Raised when all colours in the sequence are collected.</summary>
         public event Action RainbowCompleted;
 
-        // ── Constructor ───────────────────────────────────────────────────────
+        // ── Constructors ───────────────────────────────────────────────────────
 
         /// <param name="sequence">
         /// Ordered array of colours Gemma must collect. Must not be null or empty.
@@ -50,7 +54,34 @@ namespace GemmaRainbowSeeker
             _bankedCount    = 0;
         }
 
+        /// <summary>
+        /// Initializes progression from an enumerable colour sequence.
+        /// </summary>
+        public RainbowProgress(IEnumerable<RainbowColour> sequence)
+            : this(sequence != null ? sequence.ToArray() : null)
+        {
+        }
+
+        /// <summary>
+        /// Initializes progression from a LevelDefinition asset.
+        /// </summary>
+        public RainbowProgress(LevelDefinition definition)
+            : this(definition != null ? definition.ColourSequence : null)
+        {
+        }
+
         // ── Read-only Properties ──────────────────────────────────────────────
+
+        /// <summary>A copy of the ordered colour sequence for this level.</summary>
+        public RainbowColour[] Sequence
+        {
+            get
+            {
+                var copy = new RainbowColour[_sequence.Length];
+                _sequence.CopyTo(copy, 0);
+                return copy;
+            }
+        }
 
         /// <summary>Total number of colours in the sequence.</summary>
         public int TotalCount => _sequence.Length;
@@ -65,13 +96,30 @@ namespace GemmaRainbowSeeker
         public bool IsComplete => _collectedCount >= _sequence.Length;
 
         /// <summary>
+        /// The zero-based index of the current required gem in the sequence.
+        /// Equal to TotalCount when IsComplete is true.
+        /// </summary>
+        public int CurrentTargetIndex => _collectedCount;
+
+        /// <summary>
         /// The colour Gemma must collect next, or null if the rainbow is already complete.
+        /// Supports duplicate colours (e.g. Red, Red, Orange).
         /// </summary>
         public RainbowColour? CurrentTarget =>
             IsComplete ? (RainbowColour?)null : _sequence[_collectedCount];
 
         /// <summary>True while there is still a colour to collect.</summary>
         public bool HasTarget => !IsComplete;
+
+        /// <summary>Returns the colour at a specific index in the sequence.</summary>
+        public RainbowColour GetColourAt(int index)
+        {
+            if (index < 0 || index >= _sequence.Length)
+            {
+                throw new ArgumentOutOfRangeException(nameof(index));
+            }
+            return _sequence[index];
+        }
 
         // ── Operations ────────────────────────────────────────────────────────
 
@@ -85,7 +133,7 @@ namespace GemmaRainbowSeeker
         {
             if (IsComplete) return false;
 
-            if (colour != CurrentTarget)
+            if (colour != _sequence[_collectedCount])
             {
                 IncorrectColourAttempted?.Invoke(colour);
                 return false;
@@ -112,6 +160,7 @@ namespace GemmaRainbowSeeker
         {
             _bankedCount = _collectedCount;
             ProgressBanked?.Invoke();
+            ProgressChanged?.Invoke();
         }
 
         /// <summary>
@@ -120,9 +169,12 @@ namespace GemmaRainbowSeeker
         /// </summary>
         public void RestoreBankedProgress()
         {
-            _collectedCount = _bankedCount;
-            ProgressChanged?.Invoke();
-            TargetChanged?.Invoke();
+            if (_collectedCount != _bankedCount)
+            {
+                _collectedCount = _bankedCount;
+                ProgressChanged?.Invoke();
+                TargetChanged?.Invoke();
+            }
         }
 
         /// <summary>
@@ -138,3 +190,4 @@ namespace GemmaRainbowSeeker
         }
     }
 }
+

@@ -86,25 +86,26 @@ namespace GemmaRainbowSeeker.Tests
             // Complete level with full 3 HP
             var completionData = _session.CompleteLevel(3);
 
-            // Base score for 7 gems:
-            // 1st = 100 * 1.0 = 100 (combo -> 1.25)
-            // 2nd = 100 * 1.25 = 125 (combo -> 1.50)
-            // 3rd = 100 * 1.50 = 150 (combo -> 1.75)
-            // 4th = 100 * 1.75 = 175 (combo -> 2.00)
-            // 5th = 100 * 2.00 = 200 (combo -> 2.25)
-            // 6th = 100 * 2.25 = 225 (combo -> 2.50)
-            // 7th = 100 * 2.50 = 250 (combo -> 2.50)
-            // Total gem score = 1,225 pts
+            // Base score for 7 gems under Rainbow Rush:
+            // 1st = 100 * 1 = 100 (Rush -> x2)
+            // 2nd = 100 * 2 = 200 (Rush -> x3)
+            // 3rd = 100 * 3 = 300 (Rush -> x4)
+            // 4th = 100 * 4 = 400 (Rush -> x5)
+            // 5th = 100 * 5 = 500 (Rush -> x5)
+            // 6th = 100 * 5 = 500 (Rush -> x5)
+            // 7th = 100 * 5 = 500 (Rush -> x5)
+            // Total gem score = 2,500 pts
             // Health bonus = 3 * 150 = 450 pts
             // Time bonus = (180 - 60) * 5 = 120 * 5 = 600 pts
-            // Total score = 1,225 + 450 + 600 = 2,275 pts (>= 2200 -> 3 Stars!)
+            // Total score = 2,500 + 450 + 600 = 3,550 pts (>= 2200 -> 3 Stars!)
 
             Assert.AreEqual(450, completionData.healthBonus, "Health bonus should be 3 * 150 = 450");
             Assert.AreEqual(600, completionData.timeBonus, "Time bonus should be 120 * 5 = 600");
-            Assert.AreEqual(2275, completionData.finalScore, "Final score should include base + bonuses");
+            Assert.AreEqual(3550, completionData.finalScore, "Final score should include base + bonuses");
             Assert.AreEqual(3, completionData.starRating, "Score >= 2200 should award 3 stars");
             Assert.AreEqual(7, completionData.correctGems);
             Assert.AreEqual(3, completionData.remainingHealth);
+            Assert.AreEqual(5, completionData.highestMultiplier, "Highest Rush tier reached should be x5");
         }
 
         [Test]
@@ -127,6 +128,84 @@ namespace GemmaRainbowSeeker.Tests
             Assert.AreEqual(RainbowMeterSlot.SlotState.Banked, slot.State);
 
             Object.DestroyImmediate(slotObj);
+        }
+
+        [Test]
+        public void DynamicMeter_BuildsCorrectSlotCount_ForCustomSequences()
+        {
+            var hudObj = new GameObject("TestHUD");
+            var hud = hudObj.AddComponent<HudController>();
+            var containerObj = new GameObject("SlotsContainer", typeof(RectTransform));
+            containerObj.transform.SetParent(hudObj.transform);
+            containerObj.AddComponent<UnityEngine.UI.HorizontalLayoutGroup>();
+
+            // 1. One gem sequence
+            var seq1 = new[] { RainbowColour.Red };
+            hud.BuildSequenceMeter(seq1);
+            Assert.AreEqual(1, containerObj.transform.childCount);
+
+            // 2. Three gem sequence with repeated colours [Red, Red, Orange]
+            var seq3 = new[] { RainbowColour.Red, RainbowColour.Red, RainbowColour.Orange };
+            hud.BuildSequenceMeter(seq3);
+            Assert.AreEqual(3, containerObj.transform.childCount);
+
+            // 3. Ten gem sequence
+            var seq10 = new[]
+            {
+                RainbowColour.Red, RainbowColour.Orange, RainbowColour.Yellow,
+                RainbowColour.Green, RainbowColour.Blue, RainbowColour.Indigo,
+                RainbowColour.Violet, RainbowColour.Red, RainbowColour.Green, RainbowColour.Blue
+            };
+            hud.BuildSequenceMeter(seq10);
+            Assert.AreEqual(10, containerObj.transform.childCount);
+
+            Object.DestroyImmediate(hudObj);
+        }
+
+        [Test]
+        public void DynamicMeter_ReflectsCollectedAndBankedStates_Independently()
+        {
+            var def = LevelDefinition.CreateRuntimeInstance(
+                levelNumber: 1,
+                sequence: new[] { RainbowColour.Red, RainbowColour.Orange, RainbowColour.Yellow, RainbowColour.Green });
+
+            _session.LoadLevel(def);
+
+            var hudObj = new GameObject("TestHUD");
+            var hud = hudObj.AddComponent<HudController>();
+            var containerObj = new GameObject("SlotsContainer", typeof(RectTransform));
+            containerObj.transform.SetParent(hudObj.transform);
+            containerObj.AddComponent<UnityEngine.UI.HorizontalLayoutGroup>();
+
+            hud.BindEvents();
+            hud.RefreshRainbowMeter();
+
+            // Collect 1st (Red)
+            _session.TryCollectGem(RainbowColour.Red);
+            hud.RefreshRainbowMeter();
+
+            // Bank Red
+            _session.BankProgress();
+            hud.RefreshRainbowMeter();
+
+            // Collect 2nd (Orange)
+            _session.TryCollectGem(RainbowColour.Orange);
+            hud.RefreshRainbowMeter();
+
+            // At this point:
+            // Slot 0 (Red) is Banked
+            // Slot 1 (Orange) is Collected (unbanked)
+            // Slot 2 (Yellow) is NextRequired
+            // Slot 3 (Green) is Empty
+
+            var slots = containerObj.GetComponentsInChildren<RainbowMeterSlot>();
+            Assert.AreEqual(4, slots.Length);
+            Assert.AreEqual(RainbowMeterSlot.SlotState.Banked, slots[0].State);
+            Assert.AreEqual(RainbowMeterSlot.SlotState.Collected, slots[1].State);
+            Assert.AreEqual(RainbowMeterSlot.SlotState.NextRequired, slots[2].State);
+            Assert.AreEqual(RainbowMeterSlot.SlotState.Empty, slots[3].State);
+
+            Object.DestroyImmediate(hudObj);
         }
     }
 }
