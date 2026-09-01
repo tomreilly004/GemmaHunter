@@ -324,7 +324,7 @@ namespace GemmaRainbowSeeker
         private void HandleProgressBanked()
         {
             OnProgressBanked?.Invoke();
-            PostFeedbackMessage("PROGRESS BANKED! 🔒", new Color(0.4f, 0.9f, 1f, 1f));
+            PostFeedbackMessage("PROGRESS BANKED! [SAVED]", new Color(0.4f, 0.9f, 1f, 1f));
         }
 
         private void HandleRainbowCompleted()

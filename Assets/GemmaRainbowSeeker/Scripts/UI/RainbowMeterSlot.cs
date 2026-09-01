@@ -137,7 +137,7 @@ namespace GemmaRainbowSeeker
                     if (lockText != null)
                     {
                         lockText.gameObject.SetActive(true);
-                        lockText.text = "🔒";
+                        lockText.text = "L";
                     }
                     if (prevState != SlotState.Banked && isActiveAndEnabled && Application.isPlaying)
                     {
