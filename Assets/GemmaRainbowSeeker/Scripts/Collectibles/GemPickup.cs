@@ -27,6 +27,10 @@ namespace GemmaRainbowSeeker
         [Tooltip("Optional burst effect prefab spawned upon correct collection.")]
         [SerializeField] private GameObject burstEffectPrefab;
 
+        [Header("Audio")]
+        [Tooltip("Specific sound clip played when collected. If null, AudioManager selects based on colour.")]
+        [SerializeField] private AudioClip pickupSound;
+
         [Header("Tuning")]
         [Tooltip("Cooldown period in seconds before a wrong attempt penalty can be triggered again on this gem.")]
         [Range(0.2f, 3f)]
@@ -57,6 +61,12 @@ namespace GemmaRainbowSeeker
         public bool IsCollected => _isCollected;
         public bool WasBanked => _wasBanked;
         public bool IsOnRejectionCooldown => _rejectionCooldownTimer > 0f;
+
+        public AudioClip PickupSound
+        {
+            get => pickupSound;
+            set => pickupSound = value;
+        }
 
         // ── Lifecycle ─────────────────────────────────────────────────────────
 
@@ -197,6 +207,26 @@ namespace GemmaRainbowSeeker
                 if (visual != null)
                 {
                     visual.PlayCollectAnimation(null);
+                }
+
+                // Audio feedback: play colour-matched pickup sound
+                if (Application.isPlaying)
+                {
+                    if (pickupSound != null)
+                    {
+                        if (AudioManager.Instance != null)
+                        {
+                            AudioManager.Instance.PlaySfx(pickupSound);
+                        }
+                        else
+                        {
+                            AudioSource.PlayClipAtPoint(pickupSound, Camera.main != null ? Camera.main.transform.position : transform.position);
+                        }
+                    }
+                    else
+                    {
+                        AudioManager.Instance?.PlayGemPickup(colour);
+                    }
                 }
 
                 // 2. Gemma trail bright flash in this gem's colour for 0.6 seconds

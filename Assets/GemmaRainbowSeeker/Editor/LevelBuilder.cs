@@ -1232,6 +1232,21 @@ namespace GemmaRainbowSeeker.Editor
             var tutorial = systems.GetComponent<TutorialCoordinator>() ?? systems.AddComponent<TutorialCoordinator>();
             var checkpoint = systems.GetComponent<CheckpointManager>() ?? systems.AddComponent<CheckpointManager>();
 
+            var audioMgr = systems.GetComponentInChildren<AudioManager>();
+            if (audioMgr == null)
+            {
+                var audioPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/GemmaRainbowSeeker/Prefabs/AudioManager.prefab");
+                if (audioPrefab != null)
+                {
+                    var audioInstance = PrefabUtility.InstantiatePrefab(audioPrefab, systems.transform) as GameObject;
+                    Undo.RegisterCreatedObjectUndo(audioInstance, "Create AudioManager");
+                }
+                else
+                {
+                    systems.AddComponent<AudioManager>();
+                }
+            }
+
             var mainCam = Camera.main;
             if (mainCam != null && mainCam.GetComponent<CameraShake2D>() == null)
             {

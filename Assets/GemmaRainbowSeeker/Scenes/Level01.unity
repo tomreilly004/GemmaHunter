@@ -1554,6 +1554,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: RainbowGate
       objectReference: {fileID: 0}
+    - target: {fileID: 6981212765325499921, guid: fb5dce014a958dd418b590f85eec1dc8, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
     - target: {fileID: 7799733410613263767, guid: fb5dce014a958dd418b590f85eec1dc8, type: 3}
       propertyPath: m_LocalPosition.x
       value: 24
@@ -5422,7 +5426,7 @@ Transform:
   m_GameObject: {fileID: 642926858}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 1.605502, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -5447,7 +5451,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: GemmaRainbowSeeker.Runtime::GemmaRainbowSeeker.ParallaxLayer
   parallaxFactor: {x: 0.85, y: 0.4}
-  targetCamera: {fileID: 0}
+  targetCamera: {fileID: 1844539865}
 --- !u!1 &648150910
 GameObject:
   m_ObjectHideFlags: 0
@@ -13467,6 +13471,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
     - target: {fileID: 1099088913995209661, guid: 662f6e669f1018f4494967c0125dd7fd, type: 3}
+      propertyPath: m_TextStyleHashCode
+      value: -1183493901
+      objectReference: {fileID: 0}
+    - target: {fileID: 1099088913995209661, guid: 662f6e669f1018f4494967c0125dd7fd, type: 3}
       propertyPath: m_ActiveFontFeatures.Array.size
       value: 0
       objectReference: {fileID: 0}
@@ -15072,6 +15080,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 466030153}
+  - {fileID: 2123658788}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &1516214280
@@ -17181,7 +17190,7 @@ Transform:
   m_GameObject: {fileID: 1711619222}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 1.0388542, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -17204,7 +17213,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: GemmaRainbowSeeker.Runtime::GemmaRainbowSeeker.ParallaxLayer
   parallaxFactor: {x: 0.55, y: 0.25}
-  targetCamera: {fileID: 0}
+  targetCamera: {fileID: 1844539865}
 --- !u!1 &1712537299
 GameObject:
   m_ObjectHideFlags: 0
@@ -18701,7 +18710,7 @@ Transform:
   m_GameObject: {fileID: 1844539863}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -10}
+  m_LocalPosition: {x: 1.8888258, y: 0, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -21102,6 +21111,68 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2092247784}
   m_CullTransparentMesh: 1
+--- !u!1001 &2123658787
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 1516214279}
+    m_Modifications:
+    - target: {fileID: 1906916772355002934, guid: 37fa20c198ff497408f4e6d7411e54fb, type: 3}
+      propertyPath: m_Name
+      value: AudioManager
+      objectReference: {fileID: 0}
+    - target: {fileID: 2624463332865462322, guid: 37fa20c198ff497408f4e6d7411e54fb, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2624463332865462322, guid: 37fa20c198ff497408f4e6d7411e54fb, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2624463332865462322, guid: 37fa20c198ff497408f4e6d7411e54fb, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2624463332865462322, guid: 37fa20c198ff497408f4e6d7411e54fb, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2624463332865462322, guid: 37fa20c198ff497408f4e6d7411e54fb, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2624463332865462322, guid: 37fa20c198ff497408f4e6d7411e54fb, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2624463332865462322, guid: 37fa20c198ff497408f4e6d7411e54fb, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2624463332865462322, guid: 37fa20c198ff497408f4e6d7411e54fb, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2624463332865462322, guid: 37fa20c198ff497408f4e6d7411e54fb, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2624463332865462322, guid: 37fa20c198ff497408f4e6d7411e54fb, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 37fa20c198ff497408f4e6d7411e54fb, type: 3}
+--- !u!4 &2123658788 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2624463332865462322, guid: 37fa20c198ff497408f4e6d7411e54fb, type: 3}
+  m_PrefabInstance: {fileID: 2123658787}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2124432892
 GameObject:
   m_ObjectHideFlags: 0

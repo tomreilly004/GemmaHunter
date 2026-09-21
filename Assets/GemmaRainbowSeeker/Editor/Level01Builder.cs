@@ -149,6 +149,9 @@ namespace GemmaRainbowSeeker.Editor
             // 12. Ensure GameSession has valid LevelRules asset
             EnsureGameSession();
 
+            // 13. Ensure AudioManager on Systems
+            EnsureAudioManager();
+
             EditorSceneManager.MarkSceneDirty(scene);
             Undo.CollapseUndoOperations(group);
             Debug.Log("[Level01Builder] Complete Level 01 generated successfully beneath 'GENERATED_Level01' with sprite pack assets!");
@@ -540,6 +543,28 @@ namespace GemmaRainbowSeeker.Editor
                 {
                     SetField(session, "_levelDefinition", def);
                     EditorUtility.SetDirty(session);
+                }
+            }
+        }
+
+        private static void EnsureAudioManager()
+        {
+            var systems = GameObject.Find("Systems");
+            if (systems != null)
+            {
+                var audioMgr = systems.GetComponentInChildren<AudioManager>();
+                if (audioMgr == null)
+                {
+                    var audioPrefab = AssetDatabase.LoadAssetAtPath<GameObject>("Assets/GemmaRainbowSeeker/Prefabs/AudioManager.prefab");
+                    if (audioPrefab != null)
+                    {
+                        var audioInstance = PrefabUtility.InstantiatePrefab(audioPrefab, systems.transform) as GameObject;
+                        Undo.RegisterCreatedObjectUndo(audioInstance, "Create AudioManager");
+                    }
+                    else
+                    {
+                        systems.AddComponent<AudioManager>();
+                    }
                 }
             }
         }

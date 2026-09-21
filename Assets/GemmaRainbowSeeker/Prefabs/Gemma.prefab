@@ -83,7 +83,7 @@ SpriteRenderer:
   m_SortingLayer: 5
   m_SortingOrder: 0
   m_MaskInteraction: 0
-  m_Sprite: {fileID: -1228967218123150073, guid: 2da51928e75b1d142a63ccaf0ce3673d, type: 3}
+  m_Sprite: {fileID: 21300000, guid: 36d5c12459d3e3e4cba13b218a2f23e5, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -443,6 +443,7 @@ MonoBehaviour:
   tailColor: {r: 0.5, g: 0.8, b: 1, a: 0}
   startWidth: 0.45
   trailTime: 0.4
+  trailIntensityMultiplier: 1
 --- !u!114 &5567426631306681822
 MonoBehaviour:
   m_ObjectHideFlags: 0

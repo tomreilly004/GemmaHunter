@@ -76,6 +76,10 @@ PrefabInstance:
       propertyPath: colour
       value: 2
       objectReference: {fileID: 0}
+    - target: {fileID: 7537597935128247937, guid: 1ee5d548f6a1297419da3c73e4eca37a, type: 3}
+      propertyPath: pickupSound
+      value: 
+      objectReference: {fileID: 8300000, guid: b2f7e419ffe4c744d9c3517b24240766, type: 3}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
